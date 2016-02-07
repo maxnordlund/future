@@ -1,9 +1,3 @@
-// TODO:
-// Write documentation
-// Write tests, especially to ensure I keep the invariants
-//
-// https://github.com/tvcutsem/harmony-reflect
-
 const links = new WeakMap()
 
 export default class Future {
