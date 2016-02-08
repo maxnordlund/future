@@ -1,5 +1,50 @@
+/** @module future */
+
+/**
+ * Map from future proxy objects back to their parent future object.
+ *
+ * @private
+ * @type {Map<Proxy, Future>}
+ */
 const links = new WeakMap()
 
+/**
+ * Class representing a future value.
+ *
+ * This is similar to a {@link Promise}, and indeed this is implemented using
+ * them. However unlike promises, a future is used just like the value it
+ * represents. These are recorded and when the actual value is realized, the
+ * operations will be played back onto that value in the _exact_ same order.
+ *
+ * To be able to do that without a type system, that has perfect knowledge of
+ * the return values of all operations, this implementaion uses a {@link Proxy}.
+ * However their are a number of invariants that a proxy handler needs to
+ * uphold, and since we're dealing with a future value, this is not always
+ * possible to do faithfully.
+ *
+ * Therefore not all traps have been implemented, and for the rest it will
+ * uphold all invariants. This means that it sometimes might _not_ return a
+ * future as one might expect. But if it didn't, it would have thrown a
+ * TypeError instead.
+ *
+ * Then the question is which traps got choosen?
+ * First, the traps can be divided into two broad categories, those that appear
+ * to operate directly on the object, and those that appear as special methods
+ * on {@link Object}/{@link Reflect}. Only the first category were considered,
+ * with the rest implemented as static methods on the {@link Future} class.
+ *
+ * For the second category only one got excluded, for the `in` operator, since
+ * it requires the trap to return a boolean. It is also implemeted as a static
+ * method.
+ *
+ * There are a few more static methods needed, since all operations are
+ * recorded by the {@link Proxy}. These allow you to await for one or an
+ * iterable of futures/promises, create new futures from any source and finally
+ * test if an {@link Proxy} object is a {@link Future}.
+ *
+ * Because of the use of {@link Proxy} objects, direct creation of future
+ * objects is strongly discouraged, use {@link Future.from} instead.
+ */
 export default class Future {
   static all(targets) {
     return Promise.all(Array.from(targets).map(target => {
@@ -124,6 +169,11 @@ export default class Future {
     return true // Assume we can set the property in the future
   }
 
+  /**
+   * Returns the proxy object associated with this future.
+   *
+   * @return {Proxy}
+   */
   valueOf() {
     return this.value
   }
