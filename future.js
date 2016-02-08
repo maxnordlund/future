@@ -1,6 +1,16 @@
 const links = new WeakMap()
 
 export default class Future {
+  static all(targets) {
+    return Promise.all(Array.from(targets).map(target => {
+      if (Future.isFuture(target)) {
+        return Future.await(target)
+      } else {
+        return Promise.resolve(target)
+      }
+    }))
+  }
+
   static await(target) {
     return _get(target).source
   }
@@ -137,6 +147,9 @@ function _get(target) {
   * ensure that the operations happen in the same order even when they occur
   * across asynchronous boundaries.
   *
+  * All of the parameters are awaited for, so you can call a future method with
+  * future values as parameters without worry.
+  *
   * @private
   * @param {string} operator to apply to the future value
   * @param {...*} parameters for the Reflect operator function
@@ -144,7 +157,7 @@ function _get(target) {
   */
 function _spliceOperator(future, operator, ...parameters) {
   let original = future.source,
-      result = original.then(value => Reflect[operator](value, ...parameters))
+      result = Future.all([original, ...parameters]).then(Reflect[operator])
 
   future.source = result.then(_ => original)
   return result
