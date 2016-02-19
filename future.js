@@ -158,6 +158,9 @@ export default class Future {
       if (descriptor.get === undefined) return undefined
     }
 
+    /** Special case the well known symbol {@link Symbol.iterator} */
+    if (property === Symbol.iterator) return Future.enumerate(target)
+
     return _spliceOperator(this, "get", property, receiver)
   }
 
