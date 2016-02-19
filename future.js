@@ -46,6 +46,13 @@ const links = new WeakMap()
  * objects is strongly discouraged, use {@link Future.from} instead.
  */
 export default class Future {
+  /**
+   * Waits for all the provided futures/promises and returns a promise for when
+   * all of those ave resolved.
+   *
+   * @param {Future|Promise} targets to wait for
+   * @return {Promise<Array>} for when all the provided targets have resolved
+   */
   static all(targets) {
     return Promise.all(Array.from(targets).map(target => {
       if (Future.isFuture(target)) {
@@ -56,16 +63,41 @@ export default class Future {
     }))
   }
 
+  /**
+   * Awaits the provided future proxy object and returns a promise for when the
+   * corresponding future resolves.
+   *
+   * @param {Future<T>} target future proxy object
+   * @return {Promise<T>} for when the provided future resolves
+   * @throws {TypeError} if the target isn't an future procy object
+   * @template T
+   */
   static await(target) {
     return _get(target).source
   }
 
+  /**
+   * Cast any value into an future.
+   *
+   * If the provided value is a future or promise, then that is awaited for,
+   * otherwise it's coerced into a promise using {@link Promise.resolve}.
+   *
+   * @param {*} value to cast into an future
+   * @return {Future} for that value
+   */
   static from(value) {
     return (new Future(value)).valueOf()
   }
 
-  static isFuture(target) {
-    return links.has(target)
+
+  /**
+   * Checks if the provided value is a future proxy object.
+   *
+   * @param {*} value to check
+   * @return {Boolean} if the provided value is a future
+   */
+  static isFuture(value) {
+    return links.has(value)
   }
 
   static getPrototypeOf(target) {
@@ -96,7 +128,43 @@ export default class Future {
     return _spliceOperator(_get(target), "has", property)
   }
 
-  // for...of
+  /**
+   * Unlike the proxy trap for enumerate, this does not follow `for...in`
+   * semantics but `for...of` semantics instead.
+   *
+   * This allows futures for iterables to be looped over easily, instead of
+   * being limited to loop over the properties of the future value.
+   * To make this case more convenient the future proxy object special cases
+   * the well known symobl {@link Symbol.iterator} using this method.
+   *
+   * Since the iterables bounds are not know until the promise resolves, this
+   * will yield new Futures until that point. Therefore you should await each
+   * future to avoid unbounded memory allocation.
+   *
+   * Because of this, each value is wrapped in an IteratorResult, so if you are
+   * overzealous you can recover by inspecting the `done` property.
+   * The downside is that you need to unwrap every value awaited for. But with
+   * destructuring assignment this becomes less of an issue.
+   *
+   * @example
+   *    async function futureIterableExample() {
+   *      // Future for some sort of (perhaps infinite) iterable
+   *      let futureIterable = Future.from(new Set([1, 2, 3]))
+   *      for (let futureValue of futureITerable) {
+   *        // Must await each value to ensure bounded memory usage
+   *        let {done, value} = await futureValue
+   *        console.log("Look ma, I'm using values from the future", value)
+   *
+   *        // Safety measure if you don't await properly and get too many
+   *        // future values using the `for..of` above.
+   *        if (done) break
+   *      }
+   *    }
+   *
+   * @param {Future<Iterable<T>>} target to iterate over
+   * @return {Generator<IteratorResult<void, Future<T>>>}
+   * @template T
+   */
   static *enumerate(target) {
     yield* _enumerate(_get(target).source.then(source => source[Symbol.iterator]()))
   }
@@ -200,7 +268,7 @@ function _get(target) {
 }
 
 /**
-  * Splices the source Promise chain with the provides Reflect operation, to
+  * Splices the source Promise chain with the provided Reflect operation, to
   * ensure that the operations happen in the same order even when they occur
   * across asynchronous boundaries.
   *
@@ -229,7 +297,9 @@ function _spliceOperator(future, operator, ...parameters) {
  * to avoid unbounded memory allocation.
  *
  * Because of this, each value is wrapped in an IteratorResult, so if you are
- * overzealous you can recover by inspecting the `done` property.
+ * overzealous you can recover by inspecting the `done` property. The downside
+ * is that you need to unwrap every value awaited for. But with destructuring
+ * assignment this becomes less of an issue.
  *
  * @private
  * @param {Promise<Iterable<T>>}
@@ -244,6 +314,9 @@ function* _enumerate(source) {
   // Wait until the source has been resolved then process the backlog,
   // handling any overflow in either direction.
   source.then(values => {
+    // This stops the while loop below
+    done = true
+
     for (let value of values) {
       if (backlog.length) {
         backlog.unshift().resolve({ done, value })
@@ -252,13 +325,13 @@ function* _enumerate(source) {
       }
     }
 
-    // This stops the while loop below
-    done = true
+    // Clear the backlog, since there aren't enough values to yield
     if (backlog.length) {
       backlog.forEach({ resolve } => resolve({ done }))
       backlog.length = 0 // Truncate the backlog to free memory
     }
   }).catch(error => {
+    // This stops the while loop below
     done = true
 
     // Reject any queued promises
@@ -270,7 +343,10 @@ function* _enumerate(source) {
     overflow.length = 0
   })
 
+  // This is stopped by the resolution of the source promise, in both cases.
   while (!done) {
+    // All of the below before the `yield` happens synchronously, so it's safe
+    // to abbreviate it a bit.
     yield Future.from(new Promise((resolve, reject) => {
       backlog.push({ resolve, reject })
     }))
