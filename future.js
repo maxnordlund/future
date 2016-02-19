@@ -107,7 +107,11 @@ export default class Future {
 
   constructor(source) {
     // Always coerce it into a Promise
-    this.source = Promise.resolve(source)
+    if (Future.isFuture(target)) {
+      this.source = Future.await(target)
+    } else {
+      this.source = Promise.resolve(target)
+    }
 
     // Proxy an function to allow trapping both `apply` and `construct`
     this.value = new Proxy(() => {}, this)
