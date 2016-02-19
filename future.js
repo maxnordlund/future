@@ -246,7 +246,7 @@ function* _enumerate(source) {
   source.then(values => {
     for (let value of values) {
       if (backlog.length) {
-        backlog.pop().resolve({ done, value })
+        backlog.unshift().resolve({ done, value })
       } else {
         overflow.push(Future.from({ done, value }))
       }
