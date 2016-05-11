@@ -9,6 +9,25 @@
 const links = new WeakMap()
 
 /**
+ * An function sentinel value used in the {@link Proxy} objects below.
+ *
+ * In order to support callable futures, the proxy needs to point to a callable
+ * object, aka a function. However this means there are some properties already
+ * defined which messes with some of the proxy traps. To combat this we scrub
+ * the sentinel by clearing its prototype and deleting all properties that can
+ * be deleted.
+ *
+ * @private
+ * @type {function(): void}
+ */
+function SENTINEL() {}
+Object.setPrototypeOf(SENTINEL, null)
+Object.getOwnPropertyNames(SENTINEL)
+.concat(Object.getOwnPropertySymbols(SENTINEL))
+.filter(key => Object.getOwnPropertyDescriptor(SENTINEL, key).configurable))
+.forEach(key => delete SENTINEL[key])
+
+/**
  * Class representing a future value.
  *
  * This is similar to a {@link Promise}, and indeed this is implemented using
@@ -82,13 +101,13 @@ export default class Future {
    * If the provided value is a future or promise, then that is awaited for,
    * otherwise it's coerced into a promise using {@link Promise.resolve}.
    *
-   * @param {*} value to cast into an future
-   * @return {Future} for that value
+   * @param {T} value to cast into an future
+   * @return {Future<T>} for that value
+   * @template T
    */
   static from(value) {
     return (new Future(value)).valueOf()
   }
-
 
   /**
    * Checks if the provided value is a future proxy object.
@@ -182,7 +201,7 @@ export default class Future {
     }
 
     // Proxy an function to allow trapping both `apply` and `construct`
-    this.value = new Proxy(() => {}, this)
+    this.value = new Proxy(SENTINEL, this)
 
     // Set a back link from the proxy to this using a WeakMap to ensure
     // proper isolation, and because proxies are finicky
