@@ -64,7 +64,7 @@ Object.getOwnPropertyNames(SENTINEL)
 export default class Future {
   /**
    * Waits for all the provided futures/promises and returns a promise for when
-   * all of those ave resolved.
+   * all of those are resolved. Preserves order of the input.
    *
    * @param {Future|Promise} targets to wait for
    * @return {Promise<Array>} for when all the provided targets have resolved
@@ -85,7 +85,7 @@ export default class Future {
    *
    * @param {Future<T>} target future proxy object
    * @return {Promise<T>} for when the provided future resolves
-   * @throws {TypeError} if the target isn't an future procy object
+   * @throws {TypeError} if the target isn't an future proxy object
    * @template T
    */
   static await(target) {
