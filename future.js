@@ -66,8 +66,8 @@ export default class Future {
    * Waits for all the provided futures/promises and returns a promise for when
    * all of those are resolved. Preserves order of the input.
    *
-   * @param {Future|Promise} targets to wait for
-   * @return {Promise<Array>} for when all the provided targets have resolved
+   * @param {ArrayLike<(Future<*>|Promise<*>)>} targets to wait for
+   * @return {Promise<Array<*>>} for when all the provided targets have resolved
    */
   static all(targets) {
     return Promise.all(Array.from(targets).map(target => {
@@ -116,37 +116,124 @@ export default class Future {
     return links.has(value)
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.getPrototypeOf}
+   *
+   * @param {Future<*>} target future
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/getPrototypeOf}
+   */
   static getPrototypeOf(target) {
     return _spliceOperator(_get(target), "getPrototypeOf")
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.setPrototypeOf}
+   *
+   * @param {Future<*>} target future
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/setPrototypeOf}
+   */
   static setPrototypeOf(target, prototype) {
     return _spliceOperator(_get(target), "setPrototypeOf", prototype)
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.isExtensible}
+   *
+   * @param {Future<*>} target future
+   * @return {Future<Boolean>}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/isExtensible}
+   */
   static isExtensible(target) {
     return _spliceOperator(_get(target), "isExtensible")
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.preventExtensions}
+   *
+   * @param {Future<*>} target future
+   * @return {Future<Boolean>}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/preventExtensions}
+   */
   static preventExtensions(target) {
     return _spliceOperator(_get(target), "preventExtensions")
   }
 
+  /**
+   * @typedef {Object} dataDescriptor
+   * @property {U} value
+   * @property {Boolean} writable
+   * @property {Boolean} configurable
+   * @property {Boolean} enumerable
+   * @template U
+   */
+
+  /**
+   * @typedef {Object} accessorDescriptor
+   * @property {function(): U} get
+   * @property {function(U): U} set
+   * @property {Boolean} configurable
+   * @property {Boolean} enumerable
+   * @template U
+   */
+
+  /**
+   * @typedef {(dataDescriptor<U>|accessorDescriptor<U>)} descriptor
+   */
+
+  /**
+   * {@link Proxy} trap for {@link Object.getOwnPropertyDescriptor}
+   *
+   * @param {Future<*>} target future
+   * @param {String} property to get property descriptor for
+   * @return {Future<descriptor>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/getOwnPropertyDescriptor}
+   */
   static getOwnPropertyDescriptor(target, property) {
     return _spliceOperator(_get(target), "getOwnPropertyDescriptor", property)
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.defineProperty}
+   *
+   * @param {Future<*>} target future
+   * @param {String} property to define
+   * @param {descriptor} descriptor for the property definition
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/defineProperty}
+   */
   static defineProperty(target, property, descriptor) {
     return _spliceOperator(_get(target), "defineProperty", property, descriptor)
   }
 
+  /**
+   * {@link Proxy} trap for the in operator
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {Future<*>} target future
+   * @param {String} property to check for existence
+   * @return {Future<Boolean>}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/has}
+   */
   static has(target, property) {
     return _spliceOperator(_get(target), "has", property)
   }
 
   /**
-   * Unlike the proxy trap for enumerate, this does not follow `for...in`
-   * semantics but `for...of` semantics instead.
+   * Unlike the deprecated proxy trap for enumerate, this does not follow
+   * `for...in` semantics but `for...of` semantics instead.
    *
    * This allows futures for iterables to be looped over easily, instead of
    * being limited to loop over the properties of the future value.
@@ -185,6 +272,14 @@ export default class Future {
     yield* _enumerate(_get(target).source.then(source => source[Symbol.iterator]()))
   }
 
+  /**
+   * {@link Proxy} trap for {@link Object.getOwnPropertyNames}
+   *
+   * @param {Future<*>} target future
+   * @return {Future<Array<String>>}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/ownKeys}
+   */
   static ownKeys(target) {
     return _spliceOperator(_get(target), "ownKeys")
   }
@@ -208,14 +303,47 @@ export default class Future {
     return this.value
   }
 
+  /**
+   * {@link Proxy} trap for a function call.
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {*} thisArg this argument for the call
+   * @param {Array<*>} parameters for the call
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/apply}
+   */
   apply(target, thisArg, parameters) {
     return _spliceOperator(this, "apply", thisArg, parameters)
   }
 
+  /**
+   * {@link Proxy} trap for the new operator
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {Array<*>} parameters for the constructor
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/construct}
+   */
   construct(target, parameters) {
     return _spliceOperator(this, "construct", parameters)
   }
 
+  /**
+   * {@link Proxy} trap for deleting a property value.
+   *
+   * This always returns true on the assumption that the deletion will go
+   * through in the future.
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {String} property to delete
+   * @return {Boolean}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/deleteProperty}
+   */
   deleteProperty(target, property) {
     let descriptor = Reflect.getOwnPropertyDescriptor(target, property)
 
@@ -231,6 +359,21 @@ export default class Future {
     yield* _enumerate(this.source.then(Reflect.enumerate))
   }
 
+  /**
+   * {@link Proxy} trap for getting a property value.
+   *
+   * This special cases the well known symbol {@link Symbol.iterator} to support
+   * iterating over future values. To do this it uses {@link Future.enumerate},
+   * with its caveats.
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {String} property to get
+   * @param {*} receiver of the assigment
+   * @return {Future<U>}
+   * @template U
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/get}
+   */
   get(target, property, receiver) {
     let descriptor = Reflect.getOwnPropertyDescriptor(target, property)
 
@@ -251,6 +394,20 @@ export default class Future {
     return _spliceOperator(this, "get", property, receiver)
   }
 
+  /**
+   * {@link Proxy} trap for setting a property value.
+   *
+   * This always returns true on the assumption that the assignment will go
+   * through in the future.
+   *
+   * @param {*} target This is always the sentinel defined above
+   * @param {String} property to set
+   * @param {*} value to set the property to
+   * @param {*} receiver of the assigment
+   * @return {Boolean}
+   *
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/set}
+   */
   set(target, property, value, receiver) {
     let descriptor = Reflect.getOwnPropertyDescriptor(target, property)
 
@@ -266,7 +423,8 @@ export default class Future {
   /**
    * Returns the proxy object associated with this future.
    *
-   * @return {Proxy}
+   * @return {Proxy<Future<T>>}
+   * @template T
    */
   valueOf() {
     return this.value
@@ -277,9 +435,10 @@ export default class Future {
  * Gets the parent future object of the provided proxy, or throws a TypeError.
  *
  * @private
- * @param {Proxy} target proxy object to look up
+ * @param {Proxy<Future<T>>} target proxy object to look up
  * @throws {TypeError} if the target is not a future proxy object
- * @return {Future}
+ * @return {Future<T>}
+ * @template T
  */
 function _get(target) {
   if (!links.has(target)) throw new TypeError("argument is not a Future")
@@ -295,9 +454,11 @@ function _get(target) {
   * future values as parameters without worry.
   *
   * @private
+  * @param {Future<T>} future to splice into
   * @param {string} operator to apply to the future value
   * @param {...*} parameters for the Reflect operator function
-  * @return {Promise} for the result of the operation
+  * @return {Promise<U>} for the result of the operation
+  * @template T, U
   */
 function _spliceOperator(future, operator, ...parameters) {
   let original = future.source,
