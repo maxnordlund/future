@@ -1,9 +1,11 @@
 # Future
 An implementation of futures in JavaScript using proxies and promises.
-Currently only works in Firefox, but will soonish work in Chrome, Opera,
-and Edge.
+It should work in the latest browsers, but double check their
+[Proxy][1] support.
 
 ## TODO:
-- [ ] Write documentation
+- [x] Write documentation
 - [ ] Write tests, especially to ensure I keep the invariants
       https://github.com/tvcutsem/harmony-reflect
+
+[1]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
