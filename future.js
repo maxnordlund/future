@@ -355,11 +355,6 @@ export default class Future {
     return true // Assume we can delete the property in the future
   }
 
-  // for...in
-  *enumerate(target) {
-    yield* _enumerate(this.source.then(Reflect.enumerate))
-  }
-
   /**
    * {@link Proxy} trap for getting a property value.
    *
