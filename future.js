@@ -323,13 +323,14 @@ export default class Future {
    *
    * @param {*} target This is always the sentinel defined above
    * @param {Array<*>} parameters for the constructor
+   * @param {*} [newTarget] constructor for @{link new.target}
    * @return {Future<U>}
    * @template U
    *
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/handler/construct}
    */
-  construct(target, parameters) {
-    return _spliceOperator(this, "construct", parameters)
+  construct(target, parameters, newTarget) {
+    return _spliceOperator(this, "construct", parameters, newTarget)
   }
 
   /**
