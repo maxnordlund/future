@@ -60,9 +60,6 @@ Object.getOwnPropertyNames(SENTINEL)
  * recorded by the {@link Proxy}. These allow you to await for one or an
  * iterable of futures/promises, create new futures from any source and finally
  * test if an {@link Proxy} object is a {@link Future}.
- *
- * Because of the use of {@link Proxy} objects, direct creation of future
- * objects is strongly discouraged, use {@link Future.from} instead.
  */
 export default class Future {
   /**
@@ -206,6 +203,9 @@ export default class Future {
     // Set a back link from the proxy to this using a WeakMap to ensure
     // proper isolation, and because proxies are finicky
     links.set(this.value, this)
+
+    // Return the proxy for this Future to make it easier to use
+    return this.value
   }
 
   apply(target, thisArg, parameters) {
