@@ -65,15 +65,12 @@ Object.getOwnPropertyNames(SENTINEL)
  * These allow you to await for one or an iterable of futures/promises, create
  * new futures from any source and finally test if an {@link Proxy} object is a
  * {@link Future}.
- *
- * @class module:future.Future
  */
 export default class Future {
   /**
    * Waits for all the provided futures/promises and returns a promise for when
    * all of those are resolved. Preserves order of the input.
    *
-   * @method module:future.Future.all
    * @param {ArrayLike<(Future<*>|Promise<*>)>} targets to wait for
    * @return {Promise<Array<*>>} for when all the provided targets have resolved
    */
@@ -91,7 +88,6 @@ export default class Future {
    * Awaits the provided future proxy object and returns a promise for when the
    * corresponding future resolves.
    *
-   * @method module:future.Future.await
    * @param {Future<T>} target future proxy object
    * @return {Promise<T>} for when the provided future resolves
    * @throws {TypeError} if the target isn't an future proxy object
@@ -107,7 +103,6 @@ export default class Future {
    * If the provided value is a future or promise, then that is awaited for,
    * otherwise it's coerced into a promise using {@link Promise.resolve}.
    *
-   * @method module:future.Future.from
    * @param {T} value to cast into an future
    * @return {Future<T>} for that value
    * @template T
@@ -119,7 +114,6 @@ export default class Future {
   /**
    * Checks if the provided value is a future proxy object.
    *
-   * @method module:future.Future.isFuture
    * @param {*} value to check
    * @return {Boolean} if the provided value is a future
    */
@@ -130,7 +124,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.getPrototypeOf}
    *
-   * @method module:future.Future.getPrototypeOf
    * @param {Future<*>} target future
    * @return {Future<U>}
    * @template U
@@ -144,7 +137,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.setPrototypeOf}
    *
-   * @method module:future.Future.setPrototypeOf
    * @param {Future<*>} target future
    * @return {Future<U>}
    * @template U
@@ -158,7 +150,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.isExtensible}
    *
-   * @method module:future.Future.isExtensible
    * @param {Future<*>} target future
    * @return {Future<Boolean>}
    *
@@ -171,7 +162,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.preventExtensions}
    *
-   * @method module:future.Future.preventExtensions
    * @param {Future<*>} target future
    * @return {Future<Boolean>}
    *
@@ -184,7 +174,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.getOwnPropertyDescriptor}
    *
-   * @method module:future.Future.getOwnPropertyDescriptor
    * @param {Future<*>} target future
    * @param {String} property to get property descriptor for
    * @return {Future<descriptor>}
@@ -199,7 +188,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.defineProperty}
    *
-   * @method module:future.Future.defineProperty
    * @param {Future<*>} target future
    * @param {String} property to define
    * @param {descriptor} descriptor for the property definition
@@ -215,7 +203,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for the `in` operator
    *
-   * @method module:future.Future.has
    * @param {*} target This is always the sentinel defined above
    * @param {Future<*>} target future
    * @param {String} property to check for existence
@@ -260,7 +247,6 @@ export default class Future {
    *      }
    *    }
    *
-   * @method module:future.Future.enumerate
    * @param {Future<Iterable<T>>} target to iterate over
    * @return {Generator<IteratorResult<void, Future<T>>>}
    * @template T
@@ -272,7 +258,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for {@link Object.getOwnPropertyNames}
    *
-   * @method module:future.Future.ownKeys
    * @param {Future<*>} target future
    * @return {Future<Array<String>>}
    *
@@ -304,7 +289,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for a function call.
    *
-   * @method module:future.Future#apply
    * @param {*} target This is always the sentinel defined above
    * @param {*} thisArg this argument for the call
    * @param {Array<*>} parameters for the call
@@ -320,7 +304,6 @@ export default class Future {
   /**
    * {@link Proxy} trap for the `new` operator
    *
-   * @method module:future.Future#construct
    * @param {*} target This is always the sentinel defined above
    * @param {Array<*>} parameters for the constructor
    * @param {*} [newTarget] constructor for @{link new.target}
@@ -339,7 +322,6 @@ export default class Future {
    * This always returns true on the assumption that the deletion will go
    * through in the future.
    *
-   * @method module:future.Future#deleteProperty
    * @param {*} target This is always the sentinel defined above
    * @param {String} property to delete
    * @return {Boolean}
@@ -363,7 +345,6 @@ export default class Future {
    * iterating over future values. To do this it uses {@link Future.enumerate},
    * with its caveats.
    *
-   * @method module:future.Future#get
    * @param {*} target This is always the sentinel defined above
    * @param {String} property to get
    * @param {*} receiver of the assigment
@@ -398,7 +379,6 @@ export default class Future {
    * This always returns true on the assumption that the assignment will go
    * through in the future.
    *
-   * @method module:future.Future#set
    * @param {*} target This is always the sentinel defined above
    * @param {String} property to set
    * @param {*} value to set the property to
@@ -422,7 +402,6 @@ export default class Future {
   /**
    * Returns the proxy object associated with this future.
    *
-   * @method module:future.Future#valueOf
    * @return {Proxy<Future<T>>}
    * @template T
    */
