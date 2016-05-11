@@ -44,22 +44,27 @@ Object.getOwnPropertyNames(SENTINEL)
  * Therefore not all traps have been implemented, and for the rest it will
  * uphold all invariants. This means that it sometimes might _not_ return a
  * future as one might expect. But if it didn't, it would have thrown a
- * TypeError instead.
+ * @link TypeError} instead.
  *
- * Then the question is which traps got choosen?
+ * ## Which traps got choosen?
  * First, the traps can be divided into two broad categories, those that appear
  * to operate directly on the object, and those that appear as special methods
  * on {@link Object}/{@link Reflect}. Only the first category were considered,
  * with the rest implemented as static methods on the {@link Future} class.
+ *
+ * The static methods all return futures, even if that would have broken an
+ * invarient on an proxy handler. This is fine because the static methods are
+ * not confined to those invariants and the user expects an @link Future}.
  *
  * For the second category only one got excluded, for the `in` operator, since
  * it requires the trap to return a boolean. It is also implemeted as a static
  * method.
  *
  * There are a few more static methods needed, since all operations are
- * recorded by the {@link Proxy}. These allow you to await for one or an
- * iterable of futures/promises, create new futures from any source and finally
- * test if an {@link Proxy} object is a {@link Future}.
+ * recorded by the {@link Proxy}, having these as normal methods wouldn't work.
+ * These allow you to await for one or an iterable of futures/promises, create
+ * new futures from any source and finally test if an {@link Proxy} object is a
+ * {@link Future}.
  */
 export default class Future {
   /**
@@ -218,7 +223,7 @@ export default class Future {
   }
 
   /**
-   * {@link Proxy} trap for the in operator
+   * {@link Proxy} trap for the `in` operator
    *
    * @param {*} target This is always the sentinel defined above
    * @param {Future<*>} target future
@@ -319,7 +324,7 @@ export default class Future {
   }
 
   /**
-   * {@link Proxy} trap for the new operator
+   * {@link Proxy} trap for the `new` operator
    *
    * @param {*} target This is always the sentinel defined above
    * @param {Array<*>} parameters for the constructor
