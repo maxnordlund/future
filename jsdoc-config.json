@@ -1,0 +1,10 @@
+{
+  "plugins": [ "plugins/markdown" ],
+  "source": {
+    "include": [ "./" ]
+  },
+  "opts": {
+    "encoding": "utf8",
+    "destination": "./doc/"
+  }
+}
