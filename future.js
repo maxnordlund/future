@@ -1,5 +1,7 @@
 /** @module future */
 
+import "babel-polyfill"
+
 /**
  * Map from future proxy objects back to their parent future object.
  *
@@ -108,7 +110,7 @@ export default class Future {
    * @template T
    */
   static from(value) {
-    return (new Future(value)).valueOf()
+    return new Future(value)
   }
 
   /**
@@ -269,10 +271,10 @@ export default class Future {
 
   constructor(source) {
     // Always coerce it into a Promise
-    if (Future.isFuture(target)) {
-      this.source = Future.await(target)
+    if (Future.isFuture(source)) {
+      this.source = Future.await(source)
     } else {
-      this.source = Promise.resolve(target)
+      this.source = Promise.resolve(source)
     }
 
     // Proxy an function to allow trapping both `apply` and `construct`
@@ -334,7 +336,7 @@ export default class Future {
     // Invariant: can only delete configurable properties.
     if (descriptor && !descriptor.configurable) return false
 
-    _spliceOperator(this, "deleteProperty", property, value, receiver)
+    _spliceOperator(this, "deleteProperty", property)
     return true // Assume we can delete the property in the future
   }
 
@@ -441,10 +443,12 @@ function _get(target) {
   */
 function _spliceOperator(future, operator, ...parameters) {
   let original = future.source,
-      result = Future.all([original, ...parameters]).then(Reflect[operator])
+      result = Future.all([original, ...parameters]).then((parameters) => {
+        return Reflect[operator].apply(Reflect, parameters)
+      })
 
   future.source = result.then(_ => original)
-  return result
+  return new Future(result)
 }
 
 /**
