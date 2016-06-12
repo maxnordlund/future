@@ -1,6 +1,7 @@
 let chai = require("chai"),
     Future = require("../future.js").default
 
+chai.use(require("sinon-chai"))
 chai.use(require("chai-as-promised"))
 chai.use((_chai, utils) => {
   chai.Assertion.addProperty("future", function future() {
@@ -17,3 +18,4 @@ chai.use((_chai, utils) => {
 
 global.Promise = require("bluebird")
 global.expect = chai.expect
+global.sinon = require("sinon")
