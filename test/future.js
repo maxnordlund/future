@@ -70,6 +70,8 @@ describe("Future", () => {
   })
 
   describeMethod(".await", () => {
+    // Can't use expect(...).to.be.a.future here since that uses Future.await
+
     it("returns a Promise", () => {
       expect(Future.await(new Future(null))).to.be.a("promise")
     })
@@ -91,6 +93,8 @@ describe("Future", () => {
   })
 
   describeMethod(".isFuture", () => {
+    // Can't use expect(...).to.be.a.future here since that uses Future.isFuture
+
     it("returns a boolean", () => {
       expect(Future.isFuture(null)).to.be.a("boolean")
     })
