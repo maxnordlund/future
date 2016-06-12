@@ -213,22 +213,46 @@ describe("Future", () => {
   })
 
   describeMethod("#deleteProperty", () => {
-    it("deletes the provided key on the future object")
+    it("deletes the provided key on the future object", () => {
+      let target = new Future({ foo: "bar", baa: "zar" })
+
+      delete target.foo
+      return expect(target).to.be.a.future.that.does.not.have.property("foo")
+    })
   })
 
   describeMethod("#get", () => {
-    it("gets the provided property of the future object")
+    it("gets the provided property of the future object", () => {
+      let target = new Future({ foo: "bar", baa: "zar" })
+
+      return expect(target.foo).to.be.a.future.that.will.become("bar")
+    })
+
     it("handles `Symbol.iterator` separately to support `for of` future iterables")
     it("respects non-writable and -configurable properties")
     it("respects non-configurable properties with an undefined getter")
   })
 
   describeMethod("#set", () => {
-    it("sets the provided property of the future object to the provided value")
+    it("sets the provided property of the future object to the provided value", () => {
+      let target = new Future({ foo: "bar", baa: "zar" })
+
+      target.foo = "something different"
+      return expect(target).to.be.a.future
+        .that.will.have.a.property("foo", "something different")
+    })
+
     it("respects non-writable and -configurable properties")
   })
 
   describeMethod("#valueOf", () => {
-    it("returns the proxy to the future")
+    it("returns the proxy to the future value", () => {
+      // Need this to access the actual future object and not the proxy.
+      let internal = Object.create(Future.prototype)
+      Future.call(internal, null)
+
+      expect(internal.valueOf() === internal, "internal.valueOf() === interal").to.be.false
+      return expect(internal.valueOf()).to.be.a.future
+    })
   })
 })
