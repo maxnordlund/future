@@ -3,6 +3,11 @@ let chai = require("chai"),
 
 chai.use(require("sinon-chai"))
 chai.use(require("chai-as-promised"))
+
+Promise.config({
+  longStackTraces: true
+})
+
 chai.use((_chai, utils) => {
   chai.Assertion.addProperty("future", function future() {
     this.assert(
