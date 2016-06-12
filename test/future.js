@@ -1,30 +1,40 @@
 import Future from "../future.js"
 
-// Change `returns a future for ...` to `returns a ... in the future`
-
-// Need this to access the actual future object and not the proxy.
-function createFuture() {
-  let future = Object.create(Future.prototype)
-  Future.call(future, null)
-  return future
-}
-
+// Convenience function to reduce boilerplate. It handles `respondTo` and table
+// based testing. Just return an hash of test name to paramter list and it will
+// verify Futures' implementation against Reflects' since they are very similar
 function describeMethod(method, block) {
-  const isStatic = method[0] === "."
+  const isStatic = (method[0] === ".")
   method = method.slice(1)
 
   describe(method, function decoratedDescribe() {
+    let subject
+
     if (isStatic) {
-      it(`has a static method ${method}`, () => {
+      it("is a static method", () => {
         expect(Future).to.itself.respondTo(method)
       })
+
+      subject = () => Future
     } else {
-      it(`has an instance method ${method}`, () => {
+      it("is an instance method", () => {
         expect(Future).to.respondTo(method)
       })
+
+      subject = () => new Future(null)
     }
 
-    block.apply(this, arguments)
+    let table = Object(block.apply(this, arguments))
+    Object.keys(table).forEach((name) => {
+      it(name, () => {
+        let parameters = table[name],
+            original = parameters.slice()
+
+        parameters[0] = new Future(parameters[0])
+        return expect(subject()[method](...parameters)).to.be.a.future
+          .and.become(Reflect[method](...original))
+      })
+    })
   })
 }
 
@@ -92,10 +102,9 @@ describe("Future", () => {
   })
 
   describeMethod(".getPrototypeOf", () => {
-    it("returns a future for the protoype", () => {
-      return expect(Future.getPrototypeOf(new Future([]))).to.be.a.future
-        .and.become(Array.prototype)
-    })
+    return {
+      "returns a future for the protoype": [[]]
+    }
   })
 
   describeMethod(".setPrototypeOf", () => {
@@ -122,11 +131,9 @@ describe("Future", () => {
   })
 
   describeMethod(".getOwnPropertyDescriptor", () => {
-    it("returns a future property descriptor", () => {
-      let target = { foo: "bar" }
-      return expect(Future.getOwnPropertyDescriptor(new Future(target), "foo")).to.be.a.future
-        .and.eventually.deep.equal(Object.getOwnPropertyDescriptor(target, "foo"))
-    })
+    return {
+      "returns a property descriptor in the future": [{ foo: "bar" }, "foo"]
+    }
   })
 
   describeMethod(".defineProperty", () => {
@@ -139,15 +146,10 @@ describe("Future", () => {
   })
 
   describeMethod(".has", () => {
-    it("returns true if the future value has the provided key", () => {
-      return expect(Future.has(new Future({ foo: "bar" }), "foo")).to.be.a.future
-        .and.eventually.be.true
-    })
-
-    it("returns false if the future value hasn't the provided key", () => {
-      return expect(Future.has(new Future({}), "foo")).to.be.a.future
-        .and.eventually.be.false
-    })
+    return {
+      "returns true if the future value has the provided key": [{ foo: "bar" }, "foo"],
+      "returns false if the future value hasn't the provided key": [{}, "foo"]
+    }
   })
 
   describeMethod(".enumerate", () => {
@@ -165,13 +167,17 @@ describe("Future", () => {
   })
 
   describeMethod(".ownKeys", () => {
-    it("returns the property names of the future object", () => {
-      return expect(Future.ownKeys(new Future({ foo: 1, bar: 2 }))).to.be.a.future
-        .and.eventually.deep.equal(["foo", "bar"])
+    let nonEnumerableTarget = {}
+    Object.defineProperty(nonEnumerableTarget, "foo", {
+      value: "bar",
+      enumerable: false
     })
 
-    it("doesn't include the property symbols")
-    it("dosen't include non-enumerable properties")
+    return {
+      "returns the property names of the future object": [{ foo: 1, bar: 2 }],
+      "this includes property symbols": [{ [Symbol.iterator]: "@@iterator" }],
+      "this includes non-enumerable properties": [nonEnumerableTarget]
+    }
   })
 
   describeMethod("#apply", () => {
