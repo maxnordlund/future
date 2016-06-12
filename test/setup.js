@@ -27,6 +27,11 @@ chai.use((_chai, utils) => {
   chai.Assertion.addProperty("will", function will() {})
   chai.Assertion.addProperty("for", function _for() {})
   chai.Assertion.addProperty("does", function does() {})
+
+  chai.Assertion.addMethod("andThen", function andThen(newExpected) {
+    // By setting the `eventually` flag, chai as promised plays along nicely
+    this._obj = Promise.resolve(newExpected)
+    utils.flag(this, "eventually", true)
   })
 })
 
