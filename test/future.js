@@ -76,7 +76,7 @@ describe("Future", () => {
       expect(Future.await(new Future(null))).to.be.a("promise")
     })
 
-    it("awaits the provided future", () => {
+    it("waits until the provided future resolves", () => {
       let target = { bar: "baz" }
       expect(Future.await(new Future(target))).to.become(target)
     })
@@ -114,23 +114,21 @@ describe("Future", () => {
   describeMethod(".setPrototypeOf", () => {
     it("sets the prototype in the future", () => {
       let target = {}
-      return expect(Future.setPrototypeOf(new Future(target), Array.prototype)).to.be.a.future
-        .and.eventually.be.true
+      return expect(Future.setPrototypeOf(new Future(target), Array.prototype)).to
+        .be.a.future.that.will.be.true
         .then(() => expect(Object.getPrototypeOf(target)).to.equal(Array.prototype))
     })
   })
 
   describeMethod(".isExtensible", () => {
     it("returns true if the future object is extensible", () => {
-      return expect(Future.isExtensible(new Future({}))).to.be.a.future
-        .and.eventually.be.true
+      return expect(Future.isExtensible(new Future({}))).to.be.a.future.that.will.be.true
     })
   })
 
   describeMethod(".preventExtensions", () => {
-    it("returns a future boolean", () => {
-      return expect(Future.preventExtensions(new Future({}))).to.be.a.future
-        .and.eventually.be.a("boolean")
+    it("returns a boolean in the future", () => {
+      return expect(Future.preventExtensions(new Future({}))).to.be.a.future.for.a("boolean")
     })
   })
 
@@ -143,9 +141,9 @@ describe("Future", () => {
   describeMethod(".defineProperty", () => {
     it("defines the provided property on the future object", () => {
       let target = {}
-      return expect(Future.defineProperty(new Future(target), "foo", { value: "bar" })).to.be.a.future
-        .and.eventually.be.a("boolean")
-        .then(() => expect(target).to.have.a.property("foo", "bar"))
+      return expect(Future.defineProperty(new Future(target), "foo", { value: "bar" })).to
+        .be.a.future.for.a("boolean")
+        .andThen(target).should.have.a.property("foo", "bar")
     })
   })
 
