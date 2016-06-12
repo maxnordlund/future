@@ -183,11 +183,33 @@ describe("Future", () => {
   })
 
   describeMethod("#apply", () => {
-    it("calls the future function and returns its result")
+    it("calls the future function and returns its result", () => {
+      let target = { sentinel: true },
+          stub = sinon.stub().returns(target),
+          futureFunction = new Future(stub)
+
+      return expect(futureFunction("some parameters")).to
+        .be.a.future.that.will.become(target)
+        .andThen(stub).should.have.been.calledWith("some parameters")
+    })
+
+    it("sets the `this` value of the future function", () => {
+      let context = { sentinel: true, method() {} },
+          spy = sinon.spy(context, "method"),
+          target = new Future(context)
+
+      return expect(target.method()).to.be.a.future
+        .andThen(spy).should.have.been.calledOn(context)
+    })
   })
 
   describeMethod("#construct", () => {
-    it("creates a new object from the future class/constructor")
+    it("creates a new object from the future class/constructor", () => {
+      class Foo {}
+      let FutureFoo = new Future(Foo)
+
+      return expect(new FutureFoo("some parameters")).to.be.a.future.for.an.instanceof(Foo)
+    })
   })
 
   describeMethod("#deleteProperty", () => {
